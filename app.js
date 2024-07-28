@@ -28,13 +28,16 @@ app.post('/createuser', (req, res)=>{
       fs.mkdir(user, (err)=>{
         if (err){
           res.sendStatus(500)
+          console.log("error");
         }
         else{
           fs.writeFile(user+"/password.txt", req.body.password, (err)=>{
             if (err){
+              console.log("Error");
               res.sendStatus(500);
             }
             else{
+              console.log("Account created");
               res.send("1")
             }
           })
@@ -44,10 +47,13 @@ app.post('/createuser', (req, res)=>{
     else{
       var pass = fs.readFile(user+"/password.txt", (err, data)=>{
         if (data == req.body.password){
+          console.log("Login approved");
           res.send("0")
         }
         else{
+          console.log("Login denied");
           res.sendStatus(401);
+          
         }
       })
     }
