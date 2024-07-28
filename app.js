@@ -2,8 +2,10 @@
 const { error } = require('console');
 const express = require('express');
 const fs = require('fs');
+const cors = require("cors");
 const app = express();
 
+app.use(cors());
 app.use(express.json())
 app.use((req, res, next)=>{
   res.setHeader("Access-Control-Allow-Origin", "*");
