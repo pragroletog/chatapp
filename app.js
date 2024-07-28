@@ -1,4 +1,4 @@
-const cors = require('cors');
+
 const { error } = require('console');
 const express = require('express');
 const axios = require('axios');
@@ -6,7 +6,6 @@ const fs = require('fs');
 const app = express();
 
 app.use(express.json())
-app.use(cors());
 app.use((req, res, next)=>{
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
