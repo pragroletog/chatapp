@@ -1,65 +1,84 @@
-
-const { error } = require('console');
-const express = require('express');
-const fs = require('fs');
+var express = require('express');
+var app = express();
 const cors = require("cors");
-const app = express();
+
+app.use(express.json());
+app.use(express.static(__dirname));
+
+const { Client, GatewayIntentBits } = require('discord.js');
+const bot = new Client({ _tokenType:'', intents: [GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent] });
 
 app.use(cors());
-app.use(express.json())
-app.use((req, res, next)=>{
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-  // Request headers you wish to allow
-  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
-  // Set to true if you need the website to include cookies in the requests sent
-  // to the API (e.g. in case you use sessions)
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  // Pass to next layer of middleware
-  next();
+
+bot.on('ready', () => {
+	console.log(`\nLogged in as ${bot.user.tag}`); 
+	console.log('Bot is ready')
+});
+
+var channel;
+var lastmsg;
+var token;
+
+app.post('/login', (req, res)=>{
+	console.log(req.body)
+	try{
+		bot.login(req.body.token)
+		res.send("1");
+	}
+	catch{
+		req.sendStatus(500);
+	}
+});
+
+app.post('/getchnl', (req, res)=>{
+	try{
+		var response = {guilds:[]};
+		var  i = 0;
+		bot.guilds.cache.forEach(guild => {
+			
+			response.guilds[i] = [guild.name];
+			
+			response.guilds[i][1] = [];
+			//console.log(guild.channels.values());
+			
+			//console.log(bot.channels.array())
+			guild.channels.cache.forEach(chnl =>{
+				if (chnl.isTextBased()){
+					response.guilds[i][1].push(chnl.name);
+					response.guilds[i][1].push(chnl.id);
+				}
+			});
+			i++
+		});
+		res.send(JSON.stringify(response));
+	}
+	catch(err){
+		console.error(err);
+		res.sendStatus(500);
+	}
+
+})
+app.post('/getmsg', (req, res)=>{
+	channel = bot.channels.cache.get(req.body.channelId);
+	var response = {msgs:[]};
+	channel.messages.fetch({limit:100})
+	.then(msglist=>{
+		msglist.forEach(msg=>{
+			response.msgs.push(msg.content);
+			response.msgs.push(msg.author.username)
+		})
+		res.send(JSON.stringify(response.msgs));
+	});
 })
 
-app.post('/createuser', (req, res)=>{
-  console.log("dkhvakhkhgwhd");
-  console.log(req.body);
-  var user = "/accounts/"+req.body.username
-  fs.stat("/accounts/"+req.body.username, (err, stat)=>{
-    if (err){
-      fs.mkdir(user, (err)=>{
-        if (err){
-          res.sendStatus(500)
-          console.log("error");
-        }
-        else{
-          fs.writeFile(user+"/password.txt", req.body.password, (err)=>{
-            if (err){
-              console.log("Error");
-              res.sendStatus(500);
-            }
-            else{
-              console.log("Account created");
-              res.send("1")
-            }
-          })
-        }
-      })
-    }
-    else{
-      var pass = fs.readFile(user+"/password.txt", (err, data)=>{
-        if (data == req.body.password){
-          console.log("Login approved");
-          res.send("0")
-        }
-        else{
-          console.log("Login denied");
-          res.sendStatus(401);
-          
-        }
-      })
-    }
-  });
-});
+app.post('/send', (req, res)=>{
+	console.log("kdjlsdfjds");
+	channel.send(req.body.msg)
+	.then;
+	console.log("kdjlsdfjds");
+	res.send("1")
+})
 
-app.listen(80, () => {
-    console.log(`Server started!`);
-});
+app.listen(80, ()=>{console.log("Server started!")})
